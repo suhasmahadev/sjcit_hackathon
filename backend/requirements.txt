@@ -18,7 +18,7 @@ openpyxl
 PyPDF2
 apscheduler
 google-generativeai
-duckduckgo-search
+ddgs
 pydantic-settings
 httpx
 pypdf

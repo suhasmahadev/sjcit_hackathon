@@ -6,6 +6,7 @@ import PINAuthComponent from '@/components/auth/PINAuthComponent'
 import { listStudents, loginStudent, registerStudent } from '@/services/studentManagement'
 import { useAppMode } from '@/context/AppModeContext'
 import { useAuthSessionCtx } from '@/context/AuthSessionContext'
+import { getAnonId } from '@/utils/identity'
 import logoImage from '@/assets/logo.png'
 
 export default function LoginPage() {
@@ -57,6 +58,7 @@ export default function LoginPage() {
     setIsLoading(true)
     try {
       await loginStudent(selectedStudent.id, pin)
+      await getAnonId()
       navigate('/selection')
     } catch (err) {
       setError('Invalid PIN')

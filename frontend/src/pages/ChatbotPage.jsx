@@ -18,6 +18,26 @@ import ChatInput from './chatbot/ChatInput'
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CHAT_ENDPOINT = '/agent/chat'
 
+// ─── Intent classification ────────────────────────────────────────────────────
+const TASK_KEYWORDS = [
+  'analyze','plan','recommend','explain','help with','suggest','assess',
+  'compare','study','learn','understand','concept','topic','subject',
+  'syllabus','exam','test','assignment','homework','doubt','question about',
+  'what is','how does','why does','define','difference between',
+]
+const PLANNER_KEYWORDS = ['plan','planner','schedule','roadmap','study plan','weekly plan','learning path']
+
+function isTaskIntent(text) {
+  if (!text) return false
+  const lower = text.toLowerCase()
+  return TASK_KEYWORDS.some(kw => lower.includes(kw))
+}
+function isPlannerIntent(text) {
+  if (!text) return false
+  const lower = text.toLowerCase()
+  return PLANNER_KEYWORDS.some(kw => lower.includes(kw))
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getInitials(name = '') {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'
@@ -250,7 +270,162 @@ export default function ChatbotPage() {
     setLoading(true)
     setErrorMsg('')
 
-    // Show live pipeline "running" state
+    // ── Branch A: file + planner intent ── /upload-resume → /generate-plan ──
+    if (file && isPlannerIntent(text)) {
+      setMessages(prev => [...prev, {
+        role: 'assistant', text: '',
+        agent_flow: [
+          { agent: 'Uploaded ✓',          status: 'running', message: 'Reading your resume…' },
+          { agent: 'Extraction Agent',     status: 'waiting', message: 'Extracting skills and experience…' },
+          { agent: 'Webscraper Agent',     status: 'waiting', message: 'Finding learning resources…' },
+          { agent: 'Weekly Planner Agent', status: 'waiting', message: 'Building your 7-day plan…' },
+        ],
+        pipeline_done: false, time: now,
+      }])
+      const updateFlow = (flow) => setMessages(prev => {
+        const copy = [...prev]
+        const idx = copy.findLastIndex(m => m.role === 'assistant' && m.pipeline_done === false)
+        if (idx !== -1) copy[idx] = { ...copy[idx], agent_flow: flow }
+        return copy
+      })
+      try {
+        const fd = new FormData(); fd.append('file', file)
+        const uploadRes = await fetch('/api/student/upload-resume', { method: 'POST', body: fd })
+        if (!uploadRes.ok) throw new Error('Resume upload failed')
+        const { resume_text } = await uploadRes.json()
+        updateFlow([
+          { agent: 'Uploaded ✓',          status: 'success', message: 'Resume received.' },
+          { agent: 'Extraction Agent',     status: 'running', message: 'Extracting skills…' },
+          { agent: 'Webscraper Agent',     status: 'waiting', message: 'Finding learning resources…' },
+          { agent: 'Weekly Planner Agent', status: 'waiting', message: 'Building your 7-day plan…' },
+        ])
+        updateFlow([
+          { agent: 'Uploaded ✓',          status: 'success', message: 'Resume received.' },
+          { agent: 'Extraction Agent',     status: 'success', message: 'Skills extracted.' },
+          { agent: 'Webscraper Agent',     status: 'running', message: 'Scraping learning resources…' },
+          { agent: 'Weekly Planner Agent', status: 'waiting', message: 'Building your 7-day plan…' },
+        ])
+        const studentId = currentStudent?.id || 'default_student'
+        const planRes = await fetch('/api/student/generate-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id: studentId, resume_text }),
+        })
+        if (!planRes.ok) throw new Error('Plan generation failed')
+        setMessages(prev => {
+          const copy = [...prev]
+          const idx = copy.findLastIndex(m => m.role === 'assistant' && m.pipeline_done === false)
+          if (idx !== -1) copy[idx] = {
+            role: 'assistant',
+            text: "Done — your weekly plan is set. I'll track your progress.",
+            agent_flow: [
+              { agent: 'Uploaded ✓',          status: 'success', message: 'Resume received.' },
+              { agent: 'Extraction Agent',     status: 'success', message: 'Skills extracted.' },
+              { agent: 'Webscraper Agent',     status: 'success', message: 'Resources found.' },
+              { agent: 'Weekly Planner Agent', status: 'success', message: 'Plan generated.' },
+            ],
+            pipeline_done: true, time: now,
+          }
+          return copy
+        })
+      } catch (err) {
+        setMessages(prev => {
+          const copy = [...prev]
+          const idx = copy.findLastIndex(m => m.role === 'assistant' && m.pipeline_done === false)
+          if (idx !== -1) copy[idx] = {
+            role: 'assistant',
+            text: `❌ ${err.message || 'Plan generation failed. Please try again.'}`,
+            agent_flow: [{ agent: 'Weekly Planner Agent', status: 'error', message: 'Pipeline failed.' }],
+            pipeline_done: true, time: now,
+          }
+          return copy
+        })
+      } finally { setLoading(false) }
+      return
+    }
+
+    // ── Branch B: file only → resume extraction ───────────────────────────────
+    if (file) {
+      setMessages(prev => [...prev, {
+        role: 'assistant', text: '',
+        agent_flow: [
+          { agent: 'Uploaded ✓',      status: 'running', message: 'Reading your file…' },
+          { agent: 'Extraction Agent', status: 'waiting', message: 'Processing content…' },
+        ],
+        pipeline_done: false, time: now,
+      }])
+      try {
+        const fd = new FormData(); fd.append('file', file)
+        setMessages(prev => {
+          const copy = [...prev]
+          const idx = copy.findLastIndex(m => m.role === 'assistant' && m.pipeline_done === false)
+          if (idx !== -1) copy[idx] = { ...copy[idx], agent_flow: [
+            { agent: 'Uploaded ✓',      status: 'success', message: 'File received.' },
+            { agent: 'Extraction Agent', status: 'running', message: 'Processing content…' },
+          ]}
+          return copy
+        })
+        const uploadRes = await fetch('/api/student/upload-resume', { method: 'POST', body: fd })
+        if (!uploadRes.ok) throw new Error('File upload failed')
+        const { resume_text } = await uploadRes.json()
+        const preview = resume_text.slice(0, 400).trim()
+        setMessages(prev => {
+          const copy = [...prev]
+          const idx = copy.findLastIndex(m => m.role === 'assistant' && m.pipeline_done === false)
+          if (idx !== -1) copy[idx] = {
+            role: 'assistant',
+            text: `📄 Resume processed!\n\n${preview}${resume_text.length > 400 ? '…' : ''}\n\nWant a study plan? Just say "generate my plan"!`,
+            agent_flow: [
+              { agent: 'Uploaded ✓',      status: 'success', message: 'File received.' },
+              { agent: 'Extraction Agent', status: 'success', message: 'Content extracted.' },
+            ],
+            pipeline_done: true, time: now,
+          }
+          return copy
+        })
+      } catch (err) {
+        setMessages(prev => {
+          const copy = [...prev]
+          const idx = copy.findLastIndex(m => m.role === 'assistant' && m.pipeline_done === false)
+          if (idx !== -1) copy[idx] = {
+            role: 'assistant',
+            text: `❌ ${err.message || 'File processing failed.'}`,
+            agent_flow: [{ agent: 'Extraction Agent', status: 'error', message: 'Failed.' }],
+            pipeline_done: true, time: now,
+          }
+          return copy
+        })
+      } finally { setLoading(false) }
+      return
+    }
+
+    // ── Branch C: casual message → direct LLM, no pipeline card ──────────────
+    if (!isTaskIntent(text)) {
+      try {
+        const res = await fetch('/api/chat/direct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, student_id: currentStudent?.id }),
+        })
+        const data = await res.json()
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          text: data?.data?.response || 'How can I help you?',
+          agent_flow: [],
+          pipeline_done: true,
+          time: now,
+        }])
+      } catch {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          text: '❌ Something went wrong. Please try again.',
+          agent_flow: [], pipeline_done: true, time: now,
+        }])
+      } finally { setLoading(false) }
+      return
+    }
+
+    // ── Branch D: task intent → existing ADK /run_sse pipeline (UNCHANGED) ────
     setMessages(prev => [...prev, {
       role: 'assistant',
       text: '',
@@ -310,7 +485,6 @@ export default function ChatbotPage() {
 
           try {
             const parsed = JSON.parse(jsonPart)
-            // ADK SSE: each chunk has content.parts[].text
             if (parsed?.content?.parts) {
               parsed.content.parts.forEach(p => {
                 if (p.text) textParts.push(p.text)

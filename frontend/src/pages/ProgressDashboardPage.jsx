@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChartBarIcon, SparklesIcon, TargetIcon, TrendingUpIcon } from '@/components/ui/Icons'
 import { getAllProgressEvents } from '@/utils/indexedDB'
 import { buildProgressSnapshot, getSeverityLabel } from '@/utils/progressAnalytics'
+import { getCurrentStudent } from '@/services/studentManagement'
 
 function LineChart({ points }) {
   if (points.length === 0) {
@@ -75,20 +76,25 @@ function MetricCard({ icon: Icon, label, value, hint, accentClass }) {
 
 export default function ProgressDashboardPage() {
   const [events, setEvents] = useState([])
+  const [student, setStudent] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
 
-    async function loadEvents() {
-      const rows = await getAllProgressEvents()
+    async function loadDashboard() {
+      const [rows, currentStudent] = await Promise.all([
+        getAllProgressEvents(),
+        getCurrentStudent(),
+      ])
       if (active) {
         setEvents(rows)
+        setStudent(currentStudent)
         setLoading(false)
       }
     }
 
-    loadEvents()
+    loadDashboard()
 
     return () => {
       active = false
@@ -127,6 +133,12 @@ export default function ProgressDashboardPage() {
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-surface-muted">
             Local progress tracking from IndexedDB, built around attempts, misconception patterns, and how mastery is moving over time.
           </p>
+          {student?.anon_id && (
+            <div className="mt-4 max-w-2xl rounded-xl border border-surface-border bg-white/5 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-surface-muted">Anonymous blockchain-lite ID</p>
+              <p className="mt-1 break-all font-mono text-xs text-surface-text">{student.anon_id}</p>
+            </div>
+          )}
         </div>
         <Link to="/" className="btn-secondary">
           Practice more

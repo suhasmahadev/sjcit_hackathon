@@ -69,6 +69,7 @@ export async function listStudents() {
     name: s.name,
     class: s.class,
     language: s.language,
+    anon_id: s.anon_id,
     lastAccessedAt: s.lastAccessedAt,
     createdAt: s.createdAt,
   }))
@@ -95,6 +96,7 @@ export async function loginStudent(studentId, pin) {
     name: student.name,
     class: student.class,
     language: student.language,
+    anon_id: student.anon_id,
   }
 }
 
@@ -120,6 +122,7 @@ export async function getCurrentStudent() {
     name: student.name,
     class: student.class,
     language: student.language,
+    anon_id: student.anon_id,
   }
 }
 

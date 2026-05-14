@@ -233,6 +233,30 @@ async def pv_health():
     return {"status": "ok", "version": "1.0.0", "env": "unified"}
 
 
+# ── Direct chat (casual / no agent pipeline) ───────────────────────────────
+class DirectChatRequest(BaseModel):
+    message: str
+    student_id: str = None
+
+@app.post("/api/chat/direct")
+async def direct_chat(req: DirectChatRequest):
+    """Handles casual/conversational messages without triggering the agent pipeline."""
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=os.environ.get("GOOGLE_API_KEY", ""))
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        prompt = (
+            "You are a helpful AI learning assistant for college students. "
+            "Answer naturally and concisely. If it is a greeting respond warmly. "
+            "If it is a learning question give a clear, helpful answer.\n\n"
+            f"Student: {req.message}"
+        )
+        response = model.generate_content(prompt)
+        return {"success": True, "data": {"response": response.text, "agent_flow": []}}
+    except Exception as e:
+        return {"success": True, "data": {"response": "How can I help you with your studies today?", "agent_flow": []}}
+
+
 IMAGE_DIR = os.path.join(AGENT_DIR, "service_images")
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
@@ -420,6 +444,16 @@ async def lifespan(app):
 
 app.router.lifespan_context = lifespan
 # ----------------------------------------------------------
+
+@app.post("/auth/anon")
+async def create_anon_id(request: Request):
+    from utils.hashing import generate_anon_id
+
+    body = await request.json()
+    fingerprint = body.get("fingerprint")
+    if not isinstance(fingerprint, str):
+        raise HTTPException(status_code=422, detail="fingerprint must be a string")
+    return {"anon_id": generate_anon_id(fingerprint)}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
