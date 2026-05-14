@@ -1,5 +1,5 @@
-import { getExplanationTemplate } from '@/data/offlineExplanationTemplates'
-import { getOfflineQuestionById, getOfflineQuestionByTopicId } from '@/data/offlineQuestionBank'
+import { getExplanationTemplate } from '@/data/State/offlineExplanationTemplates'
+import { getOfflineQuestionById, getOfflineQuestionByTopicId } from '@/data/State/offlineQuestionBank'
 import { buildQuestionFromTopicContext } from '@/utils/syllabusPractice'
 
 const CATEGORY = {

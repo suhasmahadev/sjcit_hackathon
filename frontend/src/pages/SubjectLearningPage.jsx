@@ -8,17 +8,21 @@ import PhysicsAnimationEngine from '@/components/physics/PhysicsAnimationEngine'
 import { getAnimation } from '@/components/physics/animations'
 import { loadCatalog, getCatalogChapter, getCatalogTopic } from '@/data/catalogRegistry'
 import { saveMisconceptionResult } from '@/utils/misconceptionTracker'
+import { useLearningSelection } from '@/context/LearningSelectionContext'
 
-const STAGE_LABELS = ['Visual Explanation', 'Conceptual Questions', 'Misconception Check']
+const STAGE_LABELS = ['Description', 'Questions', 'Analysis']
 
 export default function SubjectLearningPage() {
   const navigate = useNavigate()
   const { classId, subjectId, chapterId, topicId } = useParams()
+  const { selection } = useLearningSelection()
+  const boardId = selection.boardId ?? 'state'
 
   const [catalog, setCatalog] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const [learningStage, setLearningStage] = useState(0) // 0=animation, 1=questions, 2=misconceptions
+  const [learningStage, setLearningStage] = useState(0) // 0=description, 1=questions, 2=misconceptions
+  const [showVisual, setShowVisual] = useState(false)
   const [currentQ, setCurrentQ] = useState(0)
   const [answers, setAnswers] = useState({})
   const [showHints, setShowHints] = useState({})
@@ -28,14 +32,14 @@ export default function SubjectLearningPage() {
   useEffect(() => {
     let cancelled = false
     setIsLoading(true)
-    loadCatalog(classId, subjectId).then(loadedCatalog => {
+    loadCatalog(classId, subjectId, boardId).then(loadedCatalog => {
       if (!cancelled) {
         setCatalog(loadedCatalog)
         setIsLoading(false)
       }
     })
     return () => { cancelled = true }
-  }, [classId, subjectId])
+  }, [classId, subjectId, boardId])
 
   const chapter = useMemo(() => {
     return (catalog && chapterId) ? getCatalogChapter(catalog, chapterId) : null
@@ -49,12 +53,9 @@ export default function SubjectLearningPage() {
   const questions = topic?.questions ?? []
   const misconceptions = topic?.misconceptions ?? []
 
-  // Skip animation stage if no animation is defined for this topic
   useEffect(() => {
-    if (!isLoading && topic && !topic.animationType && learningStage === 0) {
-      setLearningStage(1) // Jump straight to questions
-    }
-  }, [isLoading, topic, learningStage])
+    setShowVisual(false)
+  }, [topicId])
 
   // Find next/prev topic for navigation
   const topicNav = useMemo(() => {
@@ -142,13 +143,17 @@ export default function SubjectLearningPage() {
         <p className="mt-2 text-sm text-surface-muted">
           Chapter {chapter.number}: {chapter.title}
         </p>
+        {topic.description && (
+          <div className="mt-4 rounded-xl border border-surface-border bg-surface/40 p-4">
+            <p className="text-sm leading-relaxed text-surface-text">
+              {topic.description}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="mb-6 flex gap-2">
         {STAGE_LABELS.map((label, i) => {
-          // Hide animation tab if there is no animation
-          if (i === 0 && !topic.animationType) return null;
-
           return (
             <button
               key={label}
@@ -170,16 +175,49 @@ export default function SubjectLearningPage() {
         })}
       </div>
 
-      {/* Stage 0: Animation */}
-      {learningStage === 0 && topic.animationType && (
+      {/* Stage 0: Description-first learning */}
+      {learningStage === 0 && (
         <div className="space-y-6 animate-fade-in">
-          <PhysicsAnimationEngine
-            animation={animation}
-            title={`🔬 ${topic.title} — Visual Demonstration`}
-          />
+          <div className="rounded-2xl border border-surface-border bg-surface-card/70 p-6">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-xl font-display font-bold text-surface-text">Read the idea first</h2>
+                <p className="mt-2 text-sm leading-relaxed text-surface-muted">
+                  {topic.description ?? `${topic.title} is part of ${chapter.title}. Start with the explanation, then open the visual only if you want another way to understand it.`}
+                </p>
+              </div>
+              {animation && (
+                <button
+                  type="button"
+                  onClick={() => setShowVisual((current) => !current)}
+                  className="btn-secondary shrink-0"
+                >
+                  <Play size={16} />
+                  {showVisual ? 'Hide visual' : 'Show visual'}
+                </button>
+              )}
+            </div>
+
+            {topic.learningObjectives?.length > 0 && (
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {topic.learningObjectives.map((objective) => (
+                  <div key={objective} className="rounded-xl border border-surface-border bg-surface/50 px-4 py-3 text-sm text-surface-text">
+                    {objective}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {showVisual && animation && (
+            <PhysicsAnimationEngine
+              animation={animation}
+              title={`${topic.title} - Visual Understanding`}
+            />
+          )}
           <div className="flex justify-end">
             <button type="button" onClick={() => setLearningStage(1)} className="btn-primary">
-              I understand, continue to questions <ArrowRight size={16} />
+              Continue to questions <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -350,7 +388,7 @@ export default function SubjectLearningPage() {
               <div className="mb-6 flex items-center gap-3">
                 <BrainCircuit size={24} className="text-primary-500" />
                 <div>
-                  <h2 className="text-xl font-display font-bold text-surface-text">Misconception Check</h2>
+                  <h2 className="text-xl font-display font-bold text-surface-text">Analysis</h2>
                   <p className="text-sm text-surface-muted">These probes test for common misunderstandings. Choose carefully!</p>
                 </div>
               </div>

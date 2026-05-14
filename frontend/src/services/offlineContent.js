@@ -1,4 +1,4 @@
-import { OFFLINE_QUESTION_BANK, getOfflineQuestionById, getOfflineQuestionByTopicId } from '@/data/offlineQuestionBank'
+import { OFFLINE_QUESTION_BANK, getOfflineQuestionById, getOfflineQuestionByTopicId } from '@/data/State/offlineQuestionBank'
 import { saveQuestions, getQuestionsByTopic, getQuestionById } from '@/utils/indexedDB'
 import { buildQuestionFromTopicContext } from '@/utils/syllabusPractice'
 

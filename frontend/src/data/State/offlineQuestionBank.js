@@ -1,4 +1,4 @@
-import { getAllLoadedCatalogs } from './catalogRegistry'
+import { getAllLoadedCatalogs } from '../catalogRegistry'
 
 // The old static, template-generated list is gone. 
 // We keep this export empty so offlineContent.js doesn't crash if it tries to seed it.

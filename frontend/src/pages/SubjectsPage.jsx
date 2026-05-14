@@ -32,7 +32,7 @@ export default function SubjectsPage() {
       setError('')
 
       try {
-        const payload = await getSyllabusClass(classSlug)
+        const payload = await getSyllabusClass(classSlug, selection.boardId ?? 'state')
         if (!cancelled) {
           setClassData(payload)
           await selectClass(
@@ -78,13 +78,14 @@ export default function SubjectsPage() {
     await selectSubject(subject)
     
     // Map class slugs to catalog classIds
-    const registryClassId = classSlug === 'class-xii' ? 'class-12' : 
+    const registryClassId = classSlug === 'class-xii' ? 'class-12' :
                             classSlug === 'class-xi' ? 'class-11' :
                             classSlug === 'class-x' ? 'class-10' :
-                            classSlug === 'class-ix' ? 'class-09' : classSlug
+                            classSlug === 'class-ix' ? 'class-09' :
+                            classSlug === 'class-9' ? 'class-09' : classSlug
 
     // Intercept subjects that have an interactive catalog
-    if (hasCatalog(registryClassId, subject.subject_slug)) {
+    if (hasCatalog(registryClassId, subject.subject_slug, selection.boardId)) {
       navigate(`/learn/${registryClassId}/${subject.subject_slug}`)
       return
     }

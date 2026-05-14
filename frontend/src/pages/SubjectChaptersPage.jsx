@@ -2,10 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, BookOpen, ChevronDown, ChevronRight, Search, LoaderCircle } from 'lucide-react'
 import { loadCatalog, getCatalogChapter } from '@/data/catalogRegistry'
+import { useLearningSelection } from '@/context/LearningSelectionContext'
 
 export default function SubjectChaptersPage() {
   const navigate = useNavigate()
   const { classId, subjectId, chapterId } = useParams()
+  const { selection, selectClass } = useLearningSelection()
+  const boardId = selection.boardId ?? 'state'
   
   const [catalog, setCatalog] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -16,7 +19,7 @@ export default function SubjectChaptersPage() {
     let cancelled = false
     setIsLoading(true)
     
-    loadCatalog(classId, subjectId).then(loadedCatalog => {
+    loadCatalog(classId, subjectId, boardId).then(loadedCatalog => {
       if (!cancelled) {
         setCatalog(loadedCatalog)
         setIsLoading(false)
@@ -24,7 +27,7 @@ export default function SubjectChaptersPage() {
     })
     
     return () => { cancelled = true }
-  }, [classId, subjectId])
+  }, [classId, subjectId, boardId])
 
   const chapters = catalog?.chapters ?? []
   const singleChapter = useMemo(() => {
@@ -83,6 +86,11 @@ export default function SubjectChaptersPage() {
                     <p className="text-sm font-semibold text-surface-text group-hover:text-primary-500">
                       {topic.title}
                     </p>
+                    {topic.description && (
+                      <p className="mt-1 text-xs text-surface-muted line-clamp-2">
+                        {topic.description}
+                      </p>
+                    )}
                     <div className="mt-2 flex flex-wrap gap-2 text-xs text-surface-muted">
                       <span className="rounded-full border border-surface-border bg-surface px-2 py-0.5">
                         {topic.duration}
@@ -122,10 +130,32 @@ export default function SubjectChaptersPage() {
           <span className="badge-primary">{catalog.board}</span>
           <span className="badge-teal">{catalog.classLabel}</span>
         </div>
-        <h1 className="text-4xl font-display font-bold text-surface-text">{catalog.subject}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-4xl font-display font-bold text-surface-text">{catalog.subject}</h1>
+          
+          <div className="flex rounded-xl border border-surface-border bg-surface-card p-1">
+            <button
+              onClick={() => selectClass({ classSlug: classId, classLabel: catalog.classLabel }, { id: 'state', label: 'State Board' })}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                boardId === 'state' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-muted hover:text-surface-text'
+              }`}
+            >
+              State
+            </button>
+            <button
+              onClick={() => selectClass({ classSlug: classId, classLabel: catalog.classLabel }, { id: 'cbse', label: 'CBSE' })}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                boardId === 'cbse' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-muted hover:text-surface-text'
+              }`}
+            >
+              CBSE
+            </button>
+          </div>
+        </div>
+        
         <p className="mt-2 text-surface-muted">
           {chapters.length} chapters • {chapters.reduce((s, c) => s + c.topics.length, 0)} topics •
-          Interactive animations, questions, and misconception probes
+          Interactive animations, questions, and analysis probes
         </p>
       </div>
 

@@ -1,5 +1,10 @@
 import axios from 'axios'
 import { analyzeResponseOffline, generateExplanationOffline } from '@/utils/offlineEngine'
+import {
+  getBoardSyllabusCatalog,
+  getBoardSyllabusClass,
+  getBoardSyllabusSubject,
+} from '@/data/boardSyllabus'
 
 /**
  * api.js — Axios client pre-configured for the Pragna Vistara FastAPI backend.
@@ -1495,20 +1500,20 @@ const FALLBACK_CATALOG = {
   ]
 }
 
-export async function getSyllabusCatalog() {
-  return FALLBACK_CATALOG
+export async function getSyllabusCatalog(boardId = 'state') {
+  return getBoardSyllabusCatalog(boardId)
 }
 
-export async function getSyllabusClass(classSlug) {
-  const foundClass = FALLBACK_CATALOG.classes.find(c => c.class_slug === classSlug)
+export async function getSyllabusClass(classSlug, boardId = 'state') {
+  const foundClass = getBoardSyllabusClass(classSlug, boardId)
   if (!foundClass) throw new Error(`Class "${classSlug}" not found`)
   return foundClass
 }
 
-export async function getSyllabusSubject(classSlug, subjectSlug) {
-  const foundClass = FALLBACK_CATALOG.classes.find(c => c.class_slug === classSlug)
+export async function getSyllabusSubject(classSlug, subjectSlug, boardId = 'state') {
+  const foundClass = getBoardSyllabusClass(classSlug, boardId)
   if (!foundClass) throw new Error(`Class "${classSlug}" not found`)
-  const foundSubject = foundClass.subjects.find(s => s.subject_slug === subjectSlug)
+  const foundSubject = getBoardSyllabusSubject(classSlug, subjectSlug, boardId)
   if (!foundSubject) throw new Error(`Subject "${subjectSlug}" not found in ${classSlug}`)
   return foundSubject
 }

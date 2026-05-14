@@ -16,7 +16,7 @@ export default function ChaptersPage() {
   // Redirect Class 12 Physics to the new interactive curriculum
   useEffect(() => {
     if (classSlug === 'class-xii' && subjectSlug === 'physics') {
-      navigate('/physics/class-12', { replace: true })
+      navigate('/learn/class-12/physics', { replace: true })
     }
   }, [classSlug, subjectSlug, navigate])
 
@@ -37,7 +37,7 @@ export default function ChaptersPage() {
       setError('')
 
       try {
-        const payload = await getSyllabusSubject(classSlug, subjectSlug)
+        const payload = await getSyllabusSubject(classSlug, subjectSlug, selection.boardId ?? 'state')
         if (!cancelled) {
           setSubjectData(payload)
           if (selection.subjectId !== payload.subject_slug || selection.subjectLabel !== payload.subject_label) {
@@ -60,7 +60,7 @@ export default function ChaptersPage() {
     return () => {
       cancelled = true
     }
-  }, [classSlug, selectSubject, selection.subjectId, selection.subjectLabel, subjectSlug])
+  }, [classSlug, selectSubject, selection.boardId, selection.subjectId, selection.subjectLabel, subjectSlug])
 
   const documents = subjectData?.documents ?? []
   const documentMix = useMemo(() => {

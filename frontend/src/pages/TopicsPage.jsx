@@ -43,7 +43,7 @@ export default function TopicsPage() {
   // Redirect Class 12 Physics to the new interactive curriculum
   useEffect(() => {
     if (classSlug === 'class-xii' && subjectSlug === 'physics') {
-      navigate('/physics/class-12', { replace: true })
+      navigate('/learn/class-12/physics', { replace: true })
     }
   }, [classSlug, subjectSlug, navigate])
 

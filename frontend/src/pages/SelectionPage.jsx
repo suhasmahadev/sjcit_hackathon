@@ -7,7 +7,7 @@ import { formatCompactNumber, getLevelMeta, getSubjectVisual, groupClassesByLeve
 
 const BOARDS = [
   { id: 'state', label: 'State Board', enabled: true },
-  { id: 'cbse', label: 'CBSE', enabled: false },
+  { id: 'cbse', label: 'CBSE', enabled: true },
   { id: 'icse', label: 'ICSE', enabled: false },
 ]
 
@@ -34,7 +34,7 @@ export default function SelectionPage() {
       setError('')
 
       try {
-        const nextCatalog = await getSyllabusCatalog()
+        const nextCatalog = await getSyllabusCatalog(selectedBoard)
         if (!cancelled) {
           setCatalog(nextCatalog)
         }
@@ -54,7 +54,7 @@ export default function SelectionPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [selectedBoard])
 
   const levelGroups = useMemo(
     () => groupClassesByLevel(catalog?.classes ?? []),
@@ -104,7 +104,7 @@ export default function SelectionPage() {
           <div className="max-w-2xl">
             <p className="text-sm font-semibold text-surface-text">Board</p>
             <p className="mt-1 text-sm text-surface-muted">
-              The extracted dataset currently covers the State Board syllabus. Other boards can be added once their PDFs are processed.
+              Switch between State Board and CBSE to see only the classes, subjects, and topics available for that syllabus.
             </p>
           </div>
 
@@ -274,7 +274,7 @@ export default function SelectionPage() {
         <button
           type="button"
           onClick={handleContinue}
-          disabled={!selectedClass || selectedBoard !== 'state'}
+          disabled={!selectedClass}
           className="btn-primary"
         >
           View Subjects
