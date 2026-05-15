@@ -461,7 +461,7 @@ function StudentFormModal({
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g., Ravi Kumar"
               disabled={isLoading}
-              className="w-full px-4 py-3 bg-surface-card border border-surface-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all disabled:opacity-50"
+              className="input disabled:opacity-50"
               required
             />
           </div>
@@ -475,7 +475,7 @@ function StudentFormModal({
               value={formData.class}
               onChange={(e) => setFormData({ ...formData, class: e.target.value })}
               disabled={isLoading}
-              className="w-full px-4 py-3 bg-surface-card border border-surface-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all disabled:opacity-50"
+              className="input disabled:opacity-50"
               required
             >
               <option value="">Select class</option>
@@ -498,7 +498,7 @@ function StudentFormModal({
               value={formData.language}
               onChange={(e) => setFormData({ ...formData, language: e.target.value })}
               disabled={isLoading}
-              className="w-full px-4 py-3 bg-surface-card border border-surface-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all disabled:opacity-50"
+              className="input disabled:opacity-50"
             >
               <option value="en">English</option>
               <option value="hi">Hindi</option>
@@ -519,7 +519,7 @@ function StudentFormModal({
                 onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
                 placeholder="••••"
                 disabled={isLoading}
-                className="w-full px-4 py-3 bg-surface-card border border-surface-border rounded-lg text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all disabled:opacity-50"
+                className="input text-center tracking-widest font-mono disabled:opacity-50"
                 required
               />
               <p className="text-xs text-surface-muted mt-1">

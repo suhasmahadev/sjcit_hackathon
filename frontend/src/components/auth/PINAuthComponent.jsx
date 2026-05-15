@@ -72,7 +72,7 @@ export default function PINAuthComponent({
               value={pin}
               onChange={handlePINChange}
               placeholder="••••"
-              className="w-full px-4 py-3 bg-surface-card border border-surface-border rounded-lg text-center text-2xl tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+              className="input text-center text-2xl tracking-widest font-mono"
               disabled={isLoading}
               autoFocus
             />

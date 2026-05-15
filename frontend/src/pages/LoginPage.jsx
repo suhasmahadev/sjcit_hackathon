@@ -387,7 +387,7 @@ export default function LoginPage() {
                     setRegisterForm({ ...registerForm, name: e.target.value })
                   }
                   placeholder="e.g., Ravi Kumar"
-                  className="w-full px-4 py-3 bg-surface-card border border-surface-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                  className="input"
                   disabled={isLoading}
                   required
                 />
@@ -403,7 +403,7 @@ export default function LoginPage() {
                   onChange={(e) =>
                     setRegisterForm({ ...registerForm, class: e.target.value })
                   }
-                  className="w-full px-4 py-3 bg-surface-card border border-surface-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                  className="input"
                   disabled={isLoading}
                   required
                 >
@@ -428,7 +428,7 @@ export default function LoginPage() {
                   onChange={(e) =>
                     setRegisterForm({ ...registerForm, language: e.target.value })
                   }
-                  className="w-full px-4 py-3 bg-surface-card border border-surface-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                  className="input"
                   disabled={isLoading}
                 >
                   <option value="en">English</option>
@@ -453,7 +453,7 @@ export default function LoginPage() {
                     })
                   }
                   placeholder="••••"
-                  className="w-full px-4 py-3 bg-surface-card border border-surface-border rounded-lg text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                  className="input text-center tracking-widest font-mono"
                   disabled={isLoading}
                   required
                 />
@@ -535,7 +535,7 @@ export default function LoginPage() {
                       setValidatorForm({ ...validatorForm, username: e.target.value })
                     }
                     placeholder="educator@school.edu"
-                    className="w-full pl-10 px-4 py-3 bg-surface-card border border-surface-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 transition-all"
+                    className="input pl-10"
                     disabled={isLoading}
                   />
                 </div>
@@ -557,7 +557,7 @@ export default function LoginPage() {
                       setValidatorForm({ ...validatorForm, password: e.target.value })
                     }
                     placeholder="••••••••"
-                    className="w-full pl-10 px-4 py-3 bg-surface-card border border-surface-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 transition-all"
+                    className="input pl-10"
                     disabled={isLoading}
                   />
                 </div>
