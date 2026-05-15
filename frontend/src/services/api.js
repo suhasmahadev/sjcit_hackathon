@@ -98,14 +98,28 @@ export async function hybridLogin(email, password) {
   return data
 }
 
+const backendSyncs = new Map()
+
+function getLocalStudentEmail(student) {
+  const stableId = String(student.id || student.local_id || student.name || 'student')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, '-')
+  return `${stableId}@local.student`
+}
+
 export async function syncLocalUserToBackend(student) {
   const appMode = localStorage.getItem('appMode')
-  if (appMode !== 'online') return
+  if (appMode !== 'online' || !student?.id) return
+
+  const email = getLocalStudentEmail(student)
+  if (backendSyncs.has(email)) return backendSyncs.get(email)
   
-  try {
-    // Try to login first (assumes email is usn/name and password is pin)
-    const email = `${student.name.replace(/\s+/g, '').toLowerCase()}@local.student`
-    const password = student.pin || '1234'
+  const syncPromise = (async () => {
+    // Try to login first. Current-session sync can pass the PIN; background sync
+    // may not have it, so keep the previous default as a compatibility fallback.
+    const passwords = [...new Set([student.pin, '1234'].filter(Boolean).map(String))]
+    const hasCurrentPin = Boolean(student.pin)
     
     let res = null
     try {
@@ -113,6 +127,8 @@ export async function syncLocalUserToBackend(student) {
     } catch (e) {
       // Login failed, try register
     }
+
+    if (!hasCurrentPin) return
     
     if (!res || !res.data?.success) {
       // Register
@@ -126,11 +142,25 @@ export async function syncLocalUserToBackend(student) {
       })
     }
     
-    if (res?.data?.success && res.data.data?.access_token) {
-      localStorage.setItem('access_token', res.data.data.access_token)
+    const token = res?.data?.data?.access_token || res?.data?.data?.token
+    if (res?.data?.success && token) {
+      localStorage.setItem('access_token', token)
+      if (res.data.data?.role) localStorage.setItem('auth_role', res.data.data.role)
     }
+  })()
+    .catch((err) => {
+      console.warn('Backend student sync skipped:', err.message)
+    })
+    .finally(() => {
+      backendSyncs.delete(email)
+    })
+
+  backendSyncs.set(email, syncPromise)
+
+  try {
+    await syncPromise
   } catch (err) {
-    console.error('Failed to sync local user to backend:', err)
+    console.warn('Backend student sync skipped:', err.message)
   }
 }
 

@@ -35,6 +35,7 @@ from agent.tools import (
 from services.service import Service
 from repos.repo import Repo
 import uuid
+from agent.agents import detect_intent, run_teacher_pipeline
 
 router = APIRouter()
 
@@ -42,6 +43,9 @@ class ChatRequest(BaseModel):
     message: str
     student_id: str = None
     session_id: str = None
+    anon_id: str = None
+    language: str = "en"
+    teacher_active: bool = False
 
 # ── Helper tool functions ───────────────────────────────────────────────────────
 

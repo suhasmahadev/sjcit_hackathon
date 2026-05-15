@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, BookOpenText, CheckCircle2, Layers3, LoaderCircle, School2 } from 'lucide-react'
+import { ArrowRight, CheckCircle2, LoaderCircle, School2 } from 'lucide-react'
 import { getSyllabusCatalog } from '@/services/api'
 import { useLearningSelection } from '@/context/LearningSelectionContext'
-import { formatCompactNumber, getLevelMeta, getSubjectVisual, groupClassesByLevel } from '@/utils/syllabus'
+import { getLevelMeta, getSubjectVisual, groupClassesByLevel } from '@/utils/syllabus'
+import { BOARD_META } from '@/data/syllabusBoards'
 
 const BOARDS = [
   { id: 'state', label: 'State Board', enabled: true },
@@ -94,7 +95,7 @@ export default function SelectionPage() {
             Syllabus Curriculum
           </h1>
           <p className="mt-3 max-w-3xl text-surface-muted">
-            Pick a class to open its syllabus dashboard.
+            Pick State or CBSE, then open a class to browse only that board's syllabus.
           </p>
         </div>
       </section>

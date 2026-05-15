@@ -486,3 +486,12 @@ export default function ProgressDashboardPage() {
     </div>
   )
 }
+
+function PredictionTile({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-surface-border bg-surface/40 px-4 py-4">
+      <p className="text-xs uppercase tracking-[0.08em] text-surface-muted">{label}</p>
+      <p className="mt-2 text-2xl font-display font-bold text-surface-text">{value}</p>
+    </div>
+  )
+}

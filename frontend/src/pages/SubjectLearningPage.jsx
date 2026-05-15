@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, ArrowRight, BookOpen, BrainCircuit, CheckCircle2,
-  ChevronRight, Eye, Lightbulb, Play, XCircle, LoaderCircle
+  ChevronRight, ExternalLink, Eye, Lightbulb, Play, XCircle, LoaderCircle
 } from 'lucide-react'
 import PhysicsAnimationEngine from '@/components/physics/PhysicsAnimationEngine'
 import { getAnimation } from '@/components/physics/animations'
 import { loadCatalog, getCatalogChapter, getCatalogTopic } from '@/data/catalogRegistry'
+import { buildTopicDescription, buildVisualSearchUrl, buildVisualVideoUrl } from '@/data/syllabusBoards'
+import { useLearningSelection } from '@/context/LearningSelectionContext'
 import { saveMisconceptionResult } from '@/utils/misconceptionTracker'
 import { saveProgressEvent } from '@/utils/indexedDB'
 import { useLearningSelection } from '@/context/LearningSelectionContext'
@@ -53,6 +55,24 @@ export default function SubjectLearningPage() {
   const animation = useMemo(() => topic?.animationType ? getAnimation(topic.animationType) : null, [topic])
   const questions = topic?.questions ?? []
   const misconceptions = topic?.misconceptions ?? []
+  const topicDescription = useMemo(() => {
+    if (!topic || !chapter || !catalog) return ''
+    return topic.description || buildTopicDescription({
+      boardLabel: catalog.board ?? 'Syllabus',
+      classLabel: catalog.classLabel,
+      subjectName: catalog.subject,
+      chapterTitle: chapter.title,
+      topicName: topic.title,
+    })
+  }, [catalog, chapter, topic])
+  const visualQuery = `${catalog?.classLabel ?? classId} ${catalog?.subject ?? subjectId} ${chapter?.title ?? ''} ${topic?.title ?? ''} explanation`
+  const visualVideoUrl = topic?.visualVideoUrl || buildVisualVideoUrl(visualQuery)
+  const visualSearchUrl = topic?.visualSearchUrl || buildVisualSearchUrl(visualQuery)
+
+  useEffect(() => {
+    setLearningStage(1)
+    setShowVisualVideo(false)
+  }, [topicId])
 
   useEffect(() => {
     setShowVisual(false)
@@ -181,6 +201,60 @@ export default function SubjectLearningPage() {
           </div>
         )}
       </div>
+
+      <section className="mb-6 rounded-2xl border border-surface-border bg-surface-card/70 p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-3 inline-flex rounded-full border border-surface-border bg-surface px-2.5 py-1 text-xs font-semibold text-surface-muted">
+              Text explanation first
+            </div>
+            <div className="space-y-3 text-sm leading-relaxed text-surface-muted">
+              {topicDescription.split('\n\n').map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+            {topic.keyPoints?.length > 0 && (
+              <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                {topic.keyPoints.slice(0, 3).map((point) => (
+                  <div key={point} className="rounded-xl border border-surface-border bg-surface/60 px-3 py-2 text-xs leading-relaxed text-surface-muted">
+                    {point}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowVisualVideo((value) => !value)}
+            className="btn-secondary shrink-0"
+          >
+            <Play size={16} />
+            {showVisualVideo ? 'Hide visual video' : 'Visual video'}
+          </button>
+        </div>
+
+        {showVisualVideo && (
+          <div className="mt-5 overflow-hidden rounded-2xl border border-surface-border bg-surface">
+            <div className="flex items-center justify-between border-b border-surface-border px-4 py-3">
+              <p className="text-sm font-semibold text-surface-text">Visual understanding</p>
+              <a href={visualSearchUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-500 hover:underline">
+                Open videos
+                <ExternalLink size={13} />
+              </a>
+            </div>
+            <div className="aspect-video w-full bg-surface-card">
+              <iframe
+                title={`${topic.title} visual explanation`}
+                src={visualVideoUrl}
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        )}
+      </section>
 
       <div className="mb-6 flex gap-2">
         {STAGE_LABELS.map((label, i) => {
@@ -389,7 +463,7 @@ export default function SubjectLearningPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setLearningStage(0); setCurrentQ(0); setAnswers({}); setShowHints({})
+                        setLearningStage(1); setCurrentQ(0); setAnswers({}); setShowHints({})
                         setMisconceptionAnswers({}); setMisconceptionSubmitted(false)
                         navigate(`/learn/${classId}/${subjectId}/chapters/${chapterId}/topics/${topicNav.prev.id}`)
                       }}
@@ -402,7 +476,7 @@ export default function SubjectLearningPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setLearningStage(0); setCurrentQ(0); setAnswers({}); setShowHints({})
+                        setLearningStage(1); setCurrentQ(0); setAnswers({}); setShowHints({})
                         setMisconceptionAnswers({}); setMisconceptionSubmitted(false)
                         navigate(`/learn/${classId}/${subjectId}/chapters/${chapterId}/topics/${topicNav.next.id}`)
                       }}
@@ -507,7 +581,7 @@ export default function SubjectLearningPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setLearningStage(0); setCurrentQ(0); setAnswers({}); setShowHints({})
+                          setLearningStage(1); setCurrentQ(0); setAnswers({}); setShowHints({})
                           setMisconceptionAnswers({}); setMisconceptionSubmitted(false)
                           navigate(`/learn/${classId}/${subjectId}/chapters/${chapterId}/topics/${topicNav.prev.id}`)
                         }}
@@ -520,7 +594,7 @@ export default function SubjectLearningPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setLearningStage(0); setCurrentQ(0); setAnswers({}); setShowHints({})
+                          setLearningStage(1); setCurrentQ(0); setAnswers({}); setShowHints({})
                           setMisconceptionAnswers({}); setMisconceptionSubmitted(false)
                           navigate(`/learn/${classId}/${subjectId}/chapters/${chapterId}/topics/${topicNav.next.id}`)
                         }}

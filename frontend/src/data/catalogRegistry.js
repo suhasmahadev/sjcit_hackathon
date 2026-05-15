@@ -52,6 +52,9 @@ export async function loadCatalog(classId, subjectId, boardId = 'state') {
     console.error(`[catalogRegistry] Failed to load catalog for ${key}:`, err)
     return getBoardInteractiveCatalog(classId, subjectId, safeBoardId)
   }
+
+  const generatedCatalog = await loadStateCatalog(classId, subjectId)
+  return generatedCatalog ? enrichStateCatalog(generatedCatalog) : getStateCatalog(classId, subjectId)
 }
 
 export function hasCatalog(classId, subjectId, boardId = 'state') {

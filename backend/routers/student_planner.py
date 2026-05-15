@@ -42,10 +42,10 @@ async def upload_resume(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"PDF reading error: {str(e)}")
 
 
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 def scrape_resources(query: str, max_results: int = 3) -> list:
-    """Search DuckDuckGo using duckduckgo_search API for learning resources."""
+    """Search DuckDuckGo using ddgs API for learning resources."""
     try:
         search_query = query + " tutorial learn"
         results = []
