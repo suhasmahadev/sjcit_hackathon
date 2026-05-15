@@ -204,7 +204,36 @@ async def agent_chat(req: ChatRequest):
     try:
         response_text, provider = await generate_text_async(groq_prompt)
         print(f"[agent_chat] Served by {provider}")
-        return {"status": "success", "response": response_text, "agent_flow": []}
+        
+        # Aggressive JSON unwrapping if the AI stubbornly outputs JSON
+        import json
+        text_to_return = response_text
+        try:
+            # Strip markdown code blocks if any
+            clean_text = response_text.strip()
+            if clean_text.startswith("```json"):
+                clean_text = clean_text[7:]
+            if clean_text.startswith("```"):
+                clean_text = clean_text[3:]
+            if clean_text.endswith("```"):
+                clean_text = clean_text[:-3]
+            clean_text = clean_text.strip()
+            
+            parsed = json.loads(clean_text)
+            # If it matches the old strict JSON format
+            if isinstance(parsed, dict):
+                if "data" in parsed and isinstance(parsed["data"], dict) and "message" in parsed["data"]:
+                    text_to_return = parsed["data"]["message"]
+                elif "message" in parsed:
+                    text_to_return = parsed["message"]
+                elif "response" in parsed:
+                    text_to_return = parsed["response"]
+                elif "teacher_message" in parsed:
+                    text_to_return = parsed["teacher_message"]
+        except Exception:
+            pass # It's not JSON, which is what we want!
+
+        return {"status": "success", "response": text_to_return, "agent_flow": []}
     except RuntimeError as e:
         return {
             "status": "error",

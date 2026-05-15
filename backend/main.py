@@ -302,10 +302,12 @@ async def direct_chat(req: DirectChatRequest):
 
     kb_context = f"\n\nKnowledge Base Context:\n{topic_desc}" if topic_desc else ""
     prompt = (
-        "You are a helpful AI learning assistant for college students. "
-        "Answer naturally and concisely. If it is a greeting respond warmly. "
-        "If it is a learning question give a clear, helpful answer. "
-        "If knowledge base context is provided, use it to give a detailed and accurate explanation."
+        "You are an Expert Tutor and AI Learning Assistant for school students (Classes 1 to 12). "
+        "You have deep knowledge in ALL subjects: Mathematics, English, Physics, Chemistry, Biology, History, Geography, etc. "
+        "When a student asks you to explain ANY concept, you must provide a highly specific, clear, step-by-step, and engaging answer. "
+        "Use simple analogies, real-world examples, and structure your explanation well to ensure the student thoroughly understands. "
+        "If it is a greeting, respond warmly and ask what subject they want to learn today. "
+        "If knowledge base context is provided, use it to enhance your explanation."
         f"{kb_context}\n\n"
         f"Student: {req.message}"
     )
@@ -313,7 +315,27 @@ async def direct_chat(req: DirectChatRequest):
     try:
         response_text, provider = await generate_text_async(prompt)
         print(f"[chat/direct] Served by {provider}")
-        return {"success": True, "data": {"response": response_text, "agent_flow": []}}
+
+        # Aggressive JSON unwrapping if the AI stubbornly outputs JSON
+        import json
+        text_to_return = response_text
+        try:
+            clean_text = response_text.strip()
+            if clean_text.startswith("```json"): clean_text = clean_text[7:]
+            if clean_text.startswith("```"): clean_text = clean_text[3:]
+            if clean_text.endswith("```"): clean_text = clean_text[:-3]
+            clean_text = clean_text.strip()
+            parsed = json.loads(clean_text)
+            if isinstance(parsed, dict):
+                if "data" in parsed and isinstance(parsed["data"], dict) and "message" in parsed["data"]:
+                    text_to_return = parsed["data"]["message"]
+                elif "message" in parsed: text_to_return = parsed["message"]
+                elif "response" in parsed: text_to_return = parsed["response"]
+                elif "teacher_message" in parsed: text_to_return = parsed["teacher_message"]
+        except Exception:
+            pass
+
+        return {"success": True, "data": {"response": text_to_return, "agent_flow": []}}
     except RuntimeError as e:
         return {
             "success": False,

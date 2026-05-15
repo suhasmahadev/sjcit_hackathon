@@ -233,7 +233,7 @@ export default function ProgressDashboardPage() {
     if (activeTab === 'insights' && !recs && !loadingRecs && events.length > 0) {
       setLoadingRecs(true)
       const payload = {
-        student_id: "local_student",
+        student_id: currentStudent?.id || "guest",
         topic_breakdown: analytics.topicBreakdown.map(t => `${t.label} (${t.accuracy}%)`),
         overall_accuracy: analytics.overallAccuracy,
         weak_topics: analytics.weakTopics.map(t => t.label),

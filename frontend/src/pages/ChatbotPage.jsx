@@ -22,18 +22,22 @@ const CHAT_ENDPOINT = '/agent/chat'
 
 // ─── Intent classification ────────────────────────────────────────────────────
 const TASK_KEYWORDS = [
-  'analyze','plan','recommend','explain','help with','suggest','assess',
-  'compare','study','learn','understand','concept','topic','subject',
-  'syllabus','exam','test','assignment','homework','doubt','question about',
-  'what is','how does','why does','define','difference between',
+  'analyze','recommend','suggest','assess',
+  'compare','syllabus','exam','test','assignment','homework',
+  'schedule', 'routine', 'progress', 'tracker'
 ]
 const PLANNER_KEYWORDS = ['plan','planner','schedule','roadmap','study plan','weekly plan','learning path']
-const TEACHER_KEYWORDS = ['teach','teacher','learn with me','question me','quiz me','ask me']
+const TEACHER_KEYWORDS = [
+  'teach','teacher','learn with me','question me','quiz me','ask me',
+  'explain','help with','study','learn','understand','concept','topic','subject',
+  'doubt','question about','what is','how does','why does','define','difference between',
+  'tell me', 'can you explain'
+]
 
 function isTaskIntent(text) {
   if (!text) return false
   const lower = text.toLowerCase()
-  return TASK_KEYWORDS.some(kw => lower.includes(kw))
+  return TASK_KEYWORDS.some(kw => lower.includes(kw)) || PLANNER_KEYWORDS.some(kw => lower.includes(kw))
 }
 function isPlannerIntent(text) {
   if (!text) return false
