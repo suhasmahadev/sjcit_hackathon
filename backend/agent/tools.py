@@ -323,3 +323,37 @@ async def get_physics_topic_description(topic_name: str) -> Dict:
         return {"success": True, "data": {"topic": topic_name, "description": desc}}
     except Exception as e:
         return {"success": False, "message": str(e)}
+
+# -------------------- AGENT HELPERS -------------------- #
+
+async def fetch_topic_content(class_id: str, subject: str, chapter_id: str, topic_id: str) -> dict:
+    """Fetch content for the AI Teacher agent."""
+    from utils.catalog_helper import CatalogHelper
+    # A robust mock/fallback for the teacher
+    desc = CatalogHelper.get_description(topic_id) or f"Learn about {topic_id} in {subject}."
+    return {
+        "title": f"Topic {topic_id}",
+        "content": desc,
+        "questions": [
+            f"Can you explain the main idea behind {topic_id}?",
+            f"What are the real world applications of {topic_id}?"
+        ]
+    }
+
+def build_progress_record(student_id: str, anon_id: str, class_id: str, subject: str, topic_id: str, question: str, answer: str, score: int, mastery_delta: int, misconception: str, misconception_type: str, language: str) -> dict:
+    """Build a progress record to save after a student answers a question."""
+    return {
+        "student_id": student_id,
+        "anon_id": anon_id,
+        "class_id": class_id,
+        "subject": subject,
+        "topic_id": topic_id,
+        "question": question,
+        "answer": answer,
+        "score": score,
+        "mastery_delta": mastery_delta,
+        "misconception": misconception,
+        "misconception_type": misconception_type,
+        "language": language,
+        "timestamp": int(time.time() * 1000)
+    }

@@ -11,7 +11,6 @@ import { buildTopicDescription, buildVisualSearchUrl, buildVisualVideoUrl } from
 import { useLearningSelection } from '@/context/LearningSelectionContext'
 import { saveMisconceptionResult } from '@/utils/misconceptionTracker'
 import { saveProgressEvent } from '@/utils/indexedDB'
-import { useLearningSelection } from '@/context/LearningSelectionContext'
 
 const STAGE_LABELS = ['Description', 'Questions', 'Analysis']
 
